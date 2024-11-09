@@ -2,6 +2,7 @@
 import logging, traceback
 from flask import json 
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -79,7 +80,14 @@ class ICloudManager:
         body = data['body']
         queue_id = data['queue_id']
 
-        driver = webdriver.Chrome() 
+        # Set up Chrome options for headless mode
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Ensure Chrome runs in headless mode
+        chrome_options.add_argument("--no-sandbox")  # Necessary for environments like Docker
+        chrome_options.add_argument("--disable-dev-shm-usage")  # Prevents issues in some environments
+
+        # Initialize the Chrome WebDriver with the options
+        driver = webdriver.Chrome(options=chrome_options)
 
         driver.get("https://www.icloud.com/mail/")
 
