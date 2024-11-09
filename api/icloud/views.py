@@ -5,6 +5,7 @@ import uuid
 from flask_restx import Namespace , Resource 
 from http import HTTPStatus
 from flask import request
+from ..tasks import backgroud_email_sending_via_icloud_webmail
 from .manager import ICloudManager
 from .serializers import (
    SEND_EMAIL_FIELDS_SERIALIZER,
@@ -31,6 +32,11 @@ class IcloudMailSenderApiView(Resource):
         data = request.get_json()  
         identifier = str(uuid.uuid4())
         data['identifier'] = identifier
+
+
+        # using celery make the api call to send the email
+        # task = backgroud_email_sending_via_icloud_webmail.delay(data)
+
         email_thread = threading.Thread(
             target=ICloudManager().send_icloud_mail, args=(data,),
             kwargs={}

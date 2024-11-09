@@ -11,6 +11,10 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES=timedelta(days=1)
     JWT_SECRET_KEY='ksjs8wuUuHujsjjsjjsmsmw'
 
+    # Celery Configuration
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')  # Redis as broker
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')  # Redis as result backend
+
 
 
 class DevelopmentConfig(Config):

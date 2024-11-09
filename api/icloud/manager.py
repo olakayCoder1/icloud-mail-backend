@@ -1,5 +1,5 @@
 # type: ignore
-import logging, traceback
+import logging, traceback, threading
 from flask import json 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -14,7 +14,7 @@ import time , requests
 from flask import Blueprint
 
 
-
+lock = threading.Lock()
 
 
 class ICloudManager:
@@ -22,7 +22,7 @@ class ICloudManager:
     def __init__(self) -> None:
         pass
 
-    def get_otp_from_json_file(self, identifier, attempt=12):
+    def get_otp_from_json_file_old(self, identifier, attempt=12):
         otp = None
         while attempt > 0:
             try:
@@ -42,6 +42,26 @@ class ICloudManager:
                 
         return otp
 
+
+    def get_otp_from_json_file(self, identifier, attempt=12):
+        otp = None
+        while attempt > 0:
+            try:
+                with lock:  # Use the lock to ensure thread safety
+                    with open("otp_credentials.json", "r") as f:
+                        data = json.load(f)
+                
+                # print(data)
+                valid_otp = data.get(identifier)  # Use 'identifier' here
+                if valid_otp:
+                    return valid_otp
+                else:
+                    raise ValueError("OTP not found for the given identifier.")
+            except Exception as e:
+                print(e)
+                time.sleep(10)
+                attempt -= 1
+        return otp
 
     def get_otp_from_api(self,request_id, retries=3):
         url = "https://your-api-url.com/get-otp" 
@@ -79,6 +99,9 @@ class ICloudManager:
         title = data['subject']
         body = data['body']
         queue_id = data['queue_id']
+
+
+        return True
 
         # Set up Chrome options for headless mode
         chrome_options = Options()
@@ -243,7 +266,7 @@ class ICloudManager:
                                 )
                                 # Option 1: Use ActionChains to click and type
                                 actions = ActionChains(driver)
-                                actions.move_to_element(to_field).click().send_keys("olanrewaju@prembly.com").perform()
+                                actions.move_to_element(to_field).click().send_keys("olanrewajuabdulkabeer@outlook.com").perform()
                                 # actions.move_to_element(to_field).click().send_keys("olanrewaju@prembly.com").perform()
 
                                 time.sleep(1)
