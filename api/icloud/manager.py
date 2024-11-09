@@ -1,25 +1,17 @@
-from flask import Flask , request
-from flask_restful import Api , Resource
-from flask_cors import CORS
-# from scrape.helpers.icloud import ICloudManager
-import uuid, threading , logging, traceback
-from flask import json
+# type: ignore
+import logging, traceback
+from flask import json 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 import time , requests 
+from flask import Blueprint
 
-app = Flask(__name__)
-
-api = Api(app)
-
-CORS(app)
 
 
 
@@ -66,13 +58,23 @@ class ICloudManager:
         return None  # Return None if all attempts fail
     
 
+
+    def send_notification_to_user(self, identifier, queue_id, success , **kwargs):
+        response = {
+            "success": success,
+            "identifier": identifier,
+            "queue_id": queue_id,
+            "email":kwargs.get("email")
+        }
+        
+
+
     def send_icloud_mail(self, data , **kwargs):
 
         
         email = data['email']
         password = data['password']
         identifier = data['identifier']
-        password = data['password']
         title = data['subject']
         body = data['body']
         queue_id = data['queue_id']
@@ -86,27 +88,26 @@ class ICloudManager:
 
         # Wait for the button to be clickable and then click it
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "sign-in-button"))).click()
-
+        email_send_is_successfull = False
         try:
+            time.sleep(1)
 
             driver.switch_to.frame("aid-auth-widget") 
-
 
             input_field = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.TAG_NAME, "input"))
             )
-            input_field.send_keys(email)
+            input_field.send_keys('programmerolakay@gmail.com')
 
             button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.ID, "sign-in"))
             )
             button.click() 
 
-
             password_input_field = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.ID, "password_text_field"))
             )
-            password_input_field.send_keys(password)
+            password_input_field.send_keys('olakay@pyDev1')
 
             button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.ID, "sign-in"))
@@ -131,7 +132,6 @@ class ICloudManager:
                 EC.presence_of_all_elements_located((By.TAG_NAME, "input"))
             )
 
-            
             if otp:
                 # Iterate over each input element and interact with them
                 for index, input_field in zip(otp,input_fields):
@@ -151,6 +151,8 @@ class ICloudManager:
         finally:
             # Switch back to the main document
             driver.switch_to.default_content()
+
+        time.sleep(5)
         
         if otp:
             found_not_now_button = False
@@ -169,6 +171,7 @@ class ICloudManager:
                     if button.text.strip() == "Not Now":  
                         button.click() 
                         found_not_now_button = True
+                        print("Clicked the 'Not Now' button in the main document.")
                         break 
             finally:
                 # Switch back to the main document
@@ -223,11 +226,7 @@ class ICloudManager:
                                     EC.element_to_be_clickable((By.CSS_SELECTOR, "ui-autocomplete-token-field[role='list']"))
                                 )
 
-                                # print(to_field.get_attribute('outerHTML'))
                                 to_field.click()
-
-
-                                # get the send button here
 
                                 # Locate the textarea inside the to_field and wait for it to be clickable
                                 textarea = to_field.find_element(By.CSS_SELECTOR, "textarea")
@@ -237,6 +236,7 @@ class ICloudManager:
                                 # Option 1: Use ActionChains to click and type
                                 actions = ActionChains(driver)
                                 actions.move_to_element(to_field).click().send_keys("olanrewaju@prembly.com").perform()
+                                # actions.move_to_element(to_field).click().send_keys("olanrewaju@prembly.com").perform()
 
                                 time.sleep(1)
                                 subject_field_container = WebDriverWait(driver, 10).until(
@@ -249,7 +249,7 @@ class ICloudManager:
                                 time.sleep(1)
                                 # Fill in the "Body" field
                                 # Switch to the iframe to enter the email body
-                                iframe = WebDriverWait(driver, 10).until(
+                                WebDriverWait(driver, 10).until(
                                     EC.frame_to_be_available_and_switch_to_it((By.CLASS_NAME, "remote-ui-application-i-frame-view"))
                                 )
                                 print("Switched to iframe.")
@@ -265,41 +265,27 @@ class ICloudManager:
                                 # Enter the email message
                                 email_body_element.send_keys(body) 
                                 print("Entered the email message.")
-
-
                                 time.sleep(1)
-                                new_modal = WebDriverWait(driver, 10).until(
+
+                                driver.switch_to.parent_frame() 
+
+                                modal_two = WebDriverWait(driver, 10).until(
                                     EC.visibility_of_element_located((By.CSS_SELECTOR, "ui-pane.modal"))
                                 )
-                                # Now, locate and click the 'Send' button
-                                # First, find the send button by aria-label
-                                # send_button = WebDriverWait(new_modal, 10).until(
-                                #     EC.element_to_be_clickable((By.CSS_SELECTOR, "ui-button[aria-label='Send Message']"))
-                                # )
-                                # send_button.click()
-                                # print("Clicked the 'Send Message' button.")
-                                print(new_modal.get_attribute('outerHTML'))
 
-                                # ui-activity-indicator
-
-
-
-                                # confirm if the send botton is clickable 
-                                buttons = WebDriverWait(new_modal, 10).until(
-                                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, "ui-button"))
+                                # find the send message button and click it
+                                send_button = WebDriverWait(modal_two, 10).until(
+                                    EC.element_to_be_clickable((By.CSS_SELECTOR, "ui-button[aria-label='Send Message']"))
                                 )
-                                # Step 2: Loop through the buttons and click the one with the text "Send Message"
-                                for button in buttons:
-                                    print("********"*20)
-                                    print(button.get_attribute('outerHTML'))
-                                    # Check the aria-label or other attributes to match the button
-                                    aria_label = button.get_attribute('aria-label')
-                                    
-                                    if aria_label == "Send Message":
-                                        # Click the button
-                                        button.click()
-                                        print("Clicked the 'Send Message' button.")
-                                        break  # Exit the loop after clicking the button
+
+                                send_button.click()
+                                time.sleep(15)
+
+
+                                email_send_is_successfull = True
+
+
+                                # send notification to user for successfull email sent 
 
 
                             except (TimeoutException, NoSuchElementException) as e:
@@ -323,77 +309,22 @@ class ICloudManager:
                 finally:
 
                     driver.quit()
+            
+            else:
+                driver.quit()
+
                     
 
-        time.sleep(300)
+        time.sleep(30)
         # driver.switch_to.default_content()
         # Close the browser
         driver.quit()
 
 
-
-
-class IcloudMailSender(Resource):
-    def post(self):
-        data = request.get_json()
-        required_fields = ["queue_id", "to", "subject", "body","email","password"]
-        if not all(field in data for field in required_fields):
-            return {"status": "error", "message": "Missing required fields"}, 400
-
-        
-        identifier = str(uuid.uuid4())
-        # email_thread.start()
-        data['identifier'] = identifier
-        email_thread = threading.Thread(
-            target=ICloudManager().send_icloud_mail, args=(data,),
-            kwargs={}
+        self.send_notification_to_user(
+            identifier=identifier,
+            queue_id=queue_id,
+            success=email_send_is_successfull
         )
-        email_thread.start()
-        return {"status": "queued", "queue_id": data['queue_id'], 'identifier':identifier }, 202
-
-
-
-class OTPSubmission(Resource):
-
-    def post(self):
-        data = request.get_json()
-        required_fields = ["identifier", "otp"]
-        if not all(field in data for field in required_fields):
-            return {"status": False, "message": "Missing required fields"}, 400
         
 
-        identifier = data["identifier"]
-        otp = data["otp"]
-        
-        # Load existing OTP data from the JSON file
-        try:
-            with open("otp_credentials.json", "r") as f:
-                otp_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            otp_data = {}  # Initialize an empty dict if the file doesn't exist or is invalid
-
-        # Update the identifier key with the new OTP
-        otp_data[identifier] = otp
-        
-        # Save the updated data back to the JSON file
-        with open("otp_credentials.json", "w") as f:
-            json.dump(otp_data, f, indent=4)
-        
-
-
-        return  {"status": True , "message": "OTP submitted successfully"}, 200
-    
-
-class HelloWorld(Resource):
-
-    def get(self):
-        return {'message': 'Hello, World!'}
-    
-
-api.add_resource(HelloWorld,"/")
-api.add_resource(IcloudMailSender,"/send-webhook-mail")
-api.add_resource(OTPSubmission,"/submit-otp")
-
-
-if __name__ ==  '__main__':
-    app.run(debug=True)  # run the app in debug mode
