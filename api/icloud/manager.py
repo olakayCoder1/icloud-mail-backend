@@ -100,9 +100,6 @@ class ICloudManager:
         body = data['body']
         queue_id = data['queue_id']
 
-
-        return True
-
         # Set up Chrome options for headless mode
         chrome_options = Options()
         chrome_options.add_argument("--headless")  # Ensure Chrome runs in headless mode
