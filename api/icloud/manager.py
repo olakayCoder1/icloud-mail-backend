@@ -111,9 +111,6 @@ class ICloudManager:
 
         driver.get("https://www.icloud.com/mail/")
 
-
-        # programmerolakay@icloud.com
-
         # Wait for the button to be clickable and then click it
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CLASS_NAME, "sign-in-button"))).click()
         email_send_is_successfull = False
