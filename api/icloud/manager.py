@@ -145,7 +145,7 @@ class ICloudManager:
             # Switch back to the main document
             driver.switch_to.default_content()
 
-        time.sleep(2)
+        time.sleep(3)
         otp = None
         try:
             otp = ICloudManager().get_otp_from_json_file(identifier)
