@@ -9,7 +9,9 @@ from ..tasks import backgroud_email_sending_via_icloud_webmail
 from .manager import ICloudManager
 from .serializers import (
    SEND_EMAIL_FIELDS_SERIALIZER,
-   OTP_FIELDS_SERIALIZER
+   OTP_FIELDS_SERIALIZER,
+   LOGIN_FIELDS_SERIALIZER,
+   SEND_NEW_EMAIL_FIELDS_SERIALIZER
 )
 
 
@@ -20,8 +22,12 @@ icloud_namespace = Namespace('email', 'Email api endpoints namespace' ,path='/em
 
 send_email_model = icloud_namespace.model( 'Email Sending Initialization', SEND_EMAIL_FIELDS_SERIALIZER)
 otp_submission_model = icloud_namespace.model( 'OTP Submission', OTP_FIELDS_SERIALIZER)
+icloud_login_model = icloud_namespace.model( 'Login', LOGIN_FIELDS_SERIALIZER)
+send_new_email_model = icloud_namespace.model( 'New email', SEND_NEW_EMAIL_FIELDS_SERIALIZER)
 
 
+
+icloud_manager = ICloudManager()
 
 @icloud_namespace.route('/initiate')
 class IcloudMailSenderApiView(Resource):
@@ -67,28 +73,83 @@ class OTPSubmissionApiView(Resource):
         if not all(field in data for field in required_fields):
             return {"status": False, "message": "Missing required fields"}, 400
         
-
         identifier = data["identifier"]
         otp = data["otp"]
-        
-        # Load existing OTP data from the JSON file
+        icloud_manager.add_otp_to_json_file(identifier,otp)
+        time.sleep(10)
+        success = icloud_manager.remove_otp_from_json_file(identifier)
+        if success:
+            return {"status":True, "message":"Login successful"}, 200
+        else:
+            return {"status":False, "message":"Invalid otp"} , 400
+
+
+
+
+@icloud_namespace.route('/login')
+class IcloudMailSenderLoginApiView(Resource):
+
+    @icloud_namespace.expect(icloud_login_model)  
+    @icloud_namespace.doc(description='Icloud Login' )
+    def post(self):
+        data = request.get_json()  
+        identifier = str(uuid.uuid4())
+
+        email = data['email'] 
+        password = data['password'] 
         try:
-            with open("otp_credentials.json", "r") as f:
-                otp_data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            otp_data = {}  # Initialize an empty dict if the file doesn't exist or is invalid
-
-        # Update the identifier key with the new OTP
-        otp_data[identifier] = otp
+            time.sleep(3)
+            if icloud_manager.driver:
+                return {"status": False, "message": "There is an active session"}, 400
+            
+            email_thread = threading.Thread(
+                target=icloud_manager.login_to_icloud, args=(email,password,identifier,),
+                kwargs={}
+            )
+            email_thread.start()
+            response = {
+                "status": "queued", 
+                "message":"Kinldy provide the otp send to your phone/device",
+                'identifier':identifier 
+            }
+            return response , HTTPStatus.OK
+        except Exception as e:
+            # return internal server error
+            return {"status": False, "message": str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR
         
-        # Save the updated data back to the JSON file
-        with open("otp_credentials.json", "w") as f:
-            json.dump(otp_data, f, indent=4)
-        
-
-
-        return  {"status": True , "message": "OTP submitted successfully"}, HTTPStatus.OK
 
 
 
+@icloud_namespace.route('/webhook-send-mail')
+class IcloudMailSenderNewMailApiView(Resource):
 
+    @icloud_namespace.expect(send_new_email_model)  
+    @icloud_namespace.doc(description='Send new email' )
+    def post(self):
+        data = request.get_json()  
+
+        email = data['to'] 
+        body = data['body'] 
+        subject = data['subject'] 
+        queue_id = data['queue_id'] 
+        try:
+            # email_thread = threading.Thread(
+            #     target=icloud_manager.send_email, args=(email,subject,body,queue_id,),
+            #     kwargs={}
+            # )
+            # email_thread.start()
+            # response = {
+            #     "status": "true", 
+            #     "message":"",
+            # }
+            response = icloud_manager.send_email(email,subject,body,queue_id)
+            return response , HTTPStatus.OK
+        except Exception as e:
+            # return internal server error
+            return {"status": False, "message": str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+# @app.route("/email/logout", methods=["POST"])
+# def logout():
+#     icloud_manager.close_session()
+#     return jsonify({"status": "success", "message": "Logged out and session closed"}), HTTPStatus.OK
