@@ -29,36 +29,6 @@ send_new_email_model = icloud_namespace.model( 'New email', SEND_NEW_EMAIL_FIELD
 
 icloud_manager = ICloudManager()
 
-@icloud_namespace.route('/initiate')
-class IcloudMailSenderApiView(Resource):
-
-    @icloud_namespace.expect(send_email_model)  
-    @icloud_namespace.doc(description='Email sending initialization' )
-    def post(self):
-        data = request.get_json()  
-        identifier = str(uuid.uuid4())
-        data['identifier'] = identifier
-
-
-        # using celery make the api call to send the email
-        # task = backgroud_email_sending_via_icloud_webmail.delay(data)
-
-        email_thread = threading.Thread(
-            target=ICloudManager().send_icloud_mail, args=(data,),
-            kwargs={}
-        )
-        email_thread.start()
-        
-
-        response = {
-                "status": "queued", 
-                "message":"Email sending session initiated. Kinldy provide the otp send to your phone/device",
-                "queue_id": data['queue_id'], 
-                'identifier':identifier 
-            }
-        return response , HTTPStatus.ACCEPTED 
-
-
 @icloud_namespace.route('/submit-otp')
 class OTPSubmissionApiView(Resource):
 
@@ -147,6 +117,40 @@ class IcloudMailSenderNewMailApiView(Resource):
         except Exception as e:
             # return internal server error
             return {"status": False, "message": str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+
+
+
+@icloud_namespace.route('/initiate')
+class IcloudMailSenderApiView(Resource):
+
+    @icloud_namespace.expect(send_email_model)  
+    @icloud_namespace.doc(description='Email sending initialization' )
+    def post(self):
+        data = request.get_json()  
+        identifier = str(uuid.uuid4())
+        data['identifier'] = identifier
+
+
+        # using celery make the api call to send the email
+        # task = backgroud_email_sending_via_icloud_webmail.delay(data)
+
+        email_thread = threading.Thread(
+            target=ICloudManager().send_icloud_mail, args=(data,),
+            kwargs={}
+        )
+        email_thread.start()
+        
+
+        response = {
+                "status": "queued", 
+                "message":"Email sending session initiated. Kinldy provide the otp send to your phone/device",
+                "queue_id": data['queue_id'], 
+                'identifier':identifier 
+            }
+        return response , HTTPStatus.ACCEPTED 
+
 
 
 # @app.route("/email/logout", methods=["POST"])
