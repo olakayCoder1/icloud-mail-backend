@@ -45,6 +45,7 @@ class OTPSubmissionApiView(Resource):
         
         identifier = data["identifier"]
         otp = data["otp"]
+        
         icloud_manager.add_otp_to_json_file(identifier,otp)
         # time.sleep(10)
         # success = icloud_manager.remove_otp_from_json_file(identifier)
