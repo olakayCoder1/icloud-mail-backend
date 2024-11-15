@@ -283,7 +283,11 @@ class ICloudManager:
 
                         
             
-
+    def close_session(self):
+        if self.driver:
+            self.driver.quit()
+            self.driver = None
+            return True
 
 
     def get_otp_from_json_file_old(self, identifier, attempt=12):

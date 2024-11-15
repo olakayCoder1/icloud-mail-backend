@@ -45,7 +45,7 @@ class OTPSubmissionApiView(Resource):
         
         identifier = data["identifier"]
         otp = data["otp"]
-        
+
         icloud_manager.add_otp_to_json_file(identifier,otp)
         # time.sleep(10)
         # success = icloud_manager.remove_otp_from_json_file(identifier)
@@ -129,6 +129,24 @@ class IcloudMailSenderNewMailApiView(Resource):
             # return internal server error
             return {"status": False, "message": str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR
 
+
+
+
+@icloud_namespace.route('/kill')
+class IcloudMailSenderApiView(Resource):
+
+    @icloud_namespace.doc(description='Session Kill' )
+    def get(self):
+
+
+        icloud_manager.close_session()
+        
+
+        response = {
+                "status": True, 
+                "message":"Session destroyed",
+            }
+        return response , HTTPStatus.OK 
 
 
 
