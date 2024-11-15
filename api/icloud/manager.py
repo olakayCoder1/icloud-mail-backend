@@ -136,7 +136,8 @@ class ICloudManager:
                 return self.send_notification_to_user(
                     identifier=email,
                     queue_id=queue_id,
-                    success=False
+                    success=False,
+                    message="No active session login required"
                 )
             
             email_send_is_successfull = False
@@ -310,10 +311,10 @@ class ICloudManager:
         otp = None
         while attempt > 0:
             try:
-                with lock:  # Use the lock to ensure thread safety
-                    with open("otp_credentials.json", "r") as f:
-                        data = json.load(f)
-                
+                # with lock:  # Use the lock to ensure thread safety
+                with open("otp_credentials.json", "r") as f:
+                    data = json.load(f)
+            
                 # print(data)
                 valid_otp = data.get(identifier)  # Use 'identifier' here
                 if valid_otp:
@@ -338,21 +339,21 @@ class ICloudManager:
     def remove_otp_from_json_file(self,identifier, attempt=3):
         while attempt > 0:
             try:
-                with lock:  # Use the lock to ensure thread safety
-                    with open("otp_credentials.json", "r") as f:
-                        data = json.load(f)
+                # with lock:  # Use the lock to ensure thread safety
+                with open("otp_credentials.json", "r") as f:
+                    data = json.load(f)
 
-                    # delete the identifier from the data dict
-                    if identifier in data:
-                        del data[identifier]
+                # delete the identifier from the data dict
+                if identifier in data:
+                    del data[identifier]
 
-                        with open("otp_credentials.json", "w") as f:
-                            json.dump(data, f, indent=4)
-                        
-                        return True
+                    with open("otp_credentials.json", "w") as f:
+                        json.dump(data, f, indent=4)
                     
-                    else:
-                        return False
+                    return True
+                
+                else:
+                    return False
                         
                     
             except Exception as e:
@@ -404,6 +405,7 @@ class ICloudManager:
     def send_notification_to_user(self, identifier, queue_id, success , **kwargs):
         response = {
             "success": success,
+            "message": kwargs.get("message",''),
             "identifier": identifier,
             "queue_id": queue_id,
             "email":kwargs.get("email")
