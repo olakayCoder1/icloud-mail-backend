@@ -345,13 +345,14 @@ class ICloudManager:
 
                 # delete the identifier from the data dict
                 if identifier in data:
-                    del data[identifier]
+                    if data[identifier].get("status") == True:
+                        del data[identifier]
 
-                    with open("otp_credentials.json", "w") as f:
-                        json.dump(data, f, indent=4)
+                        with open("otp_credentials.json", "w") as f:
+                            json.dump(data, f, indent=4)
+                        
+                        return True
                     
-                    return True
-                
                 else:
                     return False
                         
@@ -359,7 +360,7 @@ class ICloudManager:
             except Exception as e:
                 print(e)
                 attempt -1
-                time.sleep(3)
+                time.sleep(1)
 
         return False
     
