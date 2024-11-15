@@ -136,7 +136,7 @@ class ICloudManager:
                 return self.send_notification_to_user(
                     identifier=email,
                     queue_id=queue_id,
-                    success=email_send_is_successfull
+                    success=False
                 )
             
             email_send_is_successfull = False
