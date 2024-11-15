@@ -46,12 +46,20 @@ class OTPSubmissionApiView(Resource):
         identifier = data["identifier"]
         otp = data["otp"]
         icloud_manager.add_otp_to_json_file(identifier,otp)
-        time.sleep(10)
-        success = icloud_manager.remove_otp_from_json_file(identifier)
-        if success:
-            return {"status":True, "message":"Login successful"}, 200
-        else:
-            return {"status":False, "message":"Invalid otp"} , 400
+        # time.sleep(10)
+        # success = icloud_manager.remove_otp_from_json_file(identifier)
+        # if success:
+        #     return {"status":True, "message":"Login successful"}, 200
+        # else:
+        #     return {"status":False, "message":"Invalid otp"} , 400
+        # Poll the file for removal
+        for _ in range(10):  # Check every second for up to 10 seconds
+            success = icloud_manager.remove_otp_from_json_file(identifier)
+            if success:
+                return {"status": True, "message": "Login successful"}, 200
+            time.sleep(1)
+
+        return {"status": False, "message": "Invalid OTP"}, 400
 
 
 

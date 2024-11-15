@@ -351,7 +351,8 @@ class ICloudManager:
                         
                         return True
                     
-                    else:return False
+                    else:
+                        return False
                         
                     
             except Exception as e:
