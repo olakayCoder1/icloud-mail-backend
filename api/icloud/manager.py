@@ -491,6 +491,8 @@ class ICloudManager:
                     # Check if the element is visible and enabled before sending keys
                     if input_field.is_displayed() and input_field.is_enabled():
                         input_field.send_keys(otp)
+                        time.sleep(1)
+                        break
                         
                     else:
                         print(f"Input field {index} is not interactable")
