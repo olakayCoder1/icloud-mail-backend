@@ -79,9 +79,8 @@ class IcloudMailSenderLoginApiView(Resource):
         email = data['email'] 
         password = data['password'] 
         try:
-            time.sleep(3)
-            if icloud_manager.driver:
-                return {"status": False, "message": "There is an active session"}, 400
+            # if icloud_manager.driver:
+            #     return {"status": False, "message": "There is an active session"}, 400
             
             email_thread = threading.Thread(
                 target=icloud_manager.login_to_icloud, args=(email,password,identifier,),

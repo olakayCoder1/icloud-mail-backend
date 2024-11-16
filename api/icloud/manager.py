@@ -23,18 +23,42 @@ class ICloudManager:
         self.driver = None
         self.found_not_now_button = False
 
+        # Initialize the browser on app start
+        self.initialize_browser()
+
+    
+    def initialize_browser(self):
+        """Start the browser session when the app starts."""
+        # Set up Chrome options for headless mode (no GUI)
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")  # Run Chrome in headless mode
+        chrome_options.add_argument("--no-sandbox")  # Necessary for environments like Docker
+        chrome_options.add_argument("--disable-dev-shm-usage")  # Prevents issues in some environments
+
+        try:
+            # Initialize the WebDriver with the options
+            self.driver = webdriver.Chrome(options=chrome_options)
+            print("Browser initialized successfully.")
+        except Exception as e:
+            logging.error(f"Error initializing the browser: {e}")
+            self.driver = None
+
+
     def login_to_icloud(self, email, password, identifier):
         # with lock:
         # Set up Chrome options for headless mode
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")  # Ensure Chrome runs in headless mode
-        chrome_options.add_argument("--no-sandbox")  # Necessary for environments like Docker
-        chrome_options.add_argument("--disable-dev-shm-usage")  # Prevents issues in some environments
+        if not self.driver:
+            raise Exception("Browser is not initialized.")
+        
+        # chrome_options = Options()
+        # chrome_options.add_argument("--headless")  # Ensure Chrome runs in headless mode
+        # chrome_options.add_argument("--no-sandbox")  # Necessary for environments like Docker
+        # chrome_options.add_argument("--disable-dev-shm-usage")  # Prevents issues in some environments
 
         # Initialize the Chrome WebDriver with the options
         # self.driver = webdriver.Chrome()
         # self.driver = webdriver.Chrome()
-        self.driver = webdriver.Chrome(options=chrome_options)
+        # self.driver = webdriver.Chrome(options=chrome_options)
 
         self.driver.get("https://www.icloud.com/mail/")
 
