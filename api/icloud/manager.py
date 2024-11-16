@@ -108,6 +108,8 @@ class ICloudManager:
                 EC.presence_of_all_elements_located((By.TAG_NAME, "input"))
             )
 
+            print(input_fields)
+
             if otp:
                 time.sleep(2)
                 # Iterate over each input element and interact with them
