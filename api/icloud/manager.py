@@ -171,7 +171,7 @@ class ICloudManager:
                     print("Failed to retrieve OTP after retries.")
                     raise
 
-            except StaleElementReferenceException as e:
+            except Exception as e:
                 print(f"Stale element reference exception: {e}")
                 retry_attempts -= 1
                 time.sleep(2)  # Optionally, wait before retrying
