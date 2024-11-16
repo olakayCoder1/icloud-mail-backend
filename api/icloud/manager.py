@@ -109,6 +109,7 @@ class ICloudManager:
             )
 
             if otp:
+                time.sleep(2)
                 # Iterate over each input element and interact with them
                 for index, input_field in zip(otp,input_fields):
                     # Check if the element is visible and enabled before sending keys
