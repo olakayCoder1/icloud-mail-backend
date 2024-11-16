@@ -98,38 +98,88 @@ class ICloudManager:
 
         time.sleep(3)
         otp = None
-        try:
-            otp = ICloudManager().get_otp_from_json_file(identifier)
-            # Interacting with the otp session
-            self.driver.switch_to.frame("aid-auth-widget") 
+        # try:
+        #     otp = ICloudManager().get_otp_from_json_file(identifier)
+        #     # Interacting with the otp session
+        #     self.driver.switch_to.frame("aid-auth-widget") 
 
-            # Get all input elements in the frame
-            input_fields = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_all_elements_located((By.TAG_NAME, "input"))
-            )
+        #     # Get all input elements in the frame
+        #     input_fields = WebDriverWait(self.driver, 10).until(
+        #         EC.presence_of_all_elements_located((By.TAG_NAME, "input"))
+        #     )
 
-            print(input_fields)
+        #     print(input_fields)
+        #     print(otp)
+        #     print(otp)
+        #     print(otp)
 
-            if otp:
-                time.sleep(2)
-                # Iterate over each input element and interact with them
-                for index, input_field in zip(otp,input_fields):
-                    # Check if the element is visible and enabled before sending keys
-                    if input_field.is_displayed() and input_field.is_enabled():
-                        input_field.send_keys(otp)
+        #     if otp:
+        #         time.sleep(2)
+        #         # Iterate over each input element and interact with them
+        #         for index, input_field in zip(otp,input_fields):
+        #             # Check if the element is visible and enabled before sending keys
+        #             if input_field.is_displayed() and input_field.is_enabled():
+        #                 input_field.send_keys(otp)
                         
-                    else:
-                        print(f"Input field {index} is not interactable")
-                        time.sleep(2)
-                        if input_field.is_displayed() and input_field.is_enabled():
-                            input_field.send_keys(otp)
-            else:
-                print("Failed to retrieve OTP after retries.")
-                raise
+        #             else:
+        #                 print(f"Input field {index} is not interactable")
+        #                 time.sleep(2)
+        #                 if input_field.is_displayed() and input_field.is_enabled():
+        #                     input_field.send_keys(otp)
+        #     else:
+        #         print("Failed to retrieve OTP after retries.")
+        #         raise
         
-        finally:
-            # Switch back to the main document
-            self.driver.switch_to.default_content()
+        # finally:
+        #     # Switch back to the main document
+        #     self.driver.switch_to.default_content()
+        # Retry fetching input fields if they become stale
+        retry_attempts = 3
+        otp = ICloudManager().get_otp_from_json_file(identifier)
+        while retry_attempts > 0:
+            try:
+                # Get all input elements in the frame
+                input_fields = WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_all_elements_located((By.TAG_NAME, "input"))
+                )
+
+                print(input_fields)
+
+                if otp and input_fields:
+                    time.sleep(2)
+                    # Iterate over each input element and interact with them
+                    for index, input_field in zip(otp, input_fields):
+                        try:
+                            # Check if the element is visible and enabled before sending keys
+                            if input_field.is_displayed() and input_field.is_enabled():
+                                input_field.send_keys(otp)
+                            else:
+                                print(f"Input field {index} is not interactable")
+                                time.sleep(2)
+                                if input_field.is_displayed() and input_field.is_enabled():
+                                    input_field.send_keys(otp)
+                        except StaleElementReferenceException:
+                            # If the element is stale, just retry fetching it and interacting with it
+                            print(f"Input field {index} is stale, retrying...")
+                            time.sleep(1)
+                            retry_attempts -= 1
+                            break  # Break the loop to retry fetching the elements
+                    else:
+                        break  # If no StaleElementReferenceException, exit the loop
+
+                else:
+                    print("Failed to retrieve OTP after retries.")
+                    raise
+
+            except StaleElementReferenceException as e:
+                print(f"Stale element reference exception: {e}")
+                retry_attempts -= 1
+                time.sleep(2)  # Optionally, wait before retrying
+                if retry_attempts == 0:
+                    raise e  # After all attempts, raise the exception if still stale
+            finally:
+                # Switch back to the main document
+                self.driver.switch_to.default_content()
 
         time.sleep(5)
         
