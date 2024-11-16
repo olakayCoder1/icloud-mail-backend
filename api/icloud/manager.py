@@ -138,6 +138,7 @@ class ICloudManager:
         otp = ICloudManager().get_otp_from_json_file(identifier)
         while retry_attempts > 0:
             try:
+                self.driver.switch_to.frame("aid-auth-widget")
                 # Get all input elements in the frame
                 input_fields = WebDriverWait(self.driver, 10).until(
                     EC.presence_of_all_elements_located((By.TAG_NAME, "input"))
