@@ -2,7 +2,8 @@ import json
 import threading
 import time
 import uuid
-from flask_restx import Namespace , Resource 
+from flask_restx import Namespace , Resource
+import hmac
 from http import HTTPStatus
 from flask import request
 from ..tasks import backgroud_email_sending_via_icloud_webmail
@@ -106,6 +107,12 @@ class IcloudMailSenderNewMailApiView(Resource):
     @icloud_namespace.expect(send_new_email_model)  
     @icloud_namespace.doc(description='Send new email' )
     def post(self):
+
+        # # Extract and validate the 'Authorization' header
+        # auth_header = request.headers.get('Authorization')
+        # if not auth_header or not self._validate_auth(auth_header):
+        #     return {"status": False, "message": "Unauthorized"}, HTTPStatus.UNAUTHORIZED
+        
         data = request.get_json()  
 
         email = data['to'] 
@@ -127,7 +134,29 @@ class IcloudMailSenderNewMailApiView(Resource):
         except Exception as e:
             # return internal server error
             return {"status": False, "message": str(e)}, HTTPStatus.INTERNAL_SERVER_ERROR
+        
 
+    @staticmethod
+    def _validate_auth(auth_header):
+        """
+        Validate the Basic Auth credentials from the Authorization header.
+        """
+        WEBHOOK_USERNAME = "scraping"
+        WEBHOOK_PASSWORD = "Hm_P&d5(7i2mEn4*dH,Stmq"
+        try:
+            # Basic authentication header format: "Basic base64encoded(username:password)"
+            auth_type, credentials = auth_header.split(' ')
+            if auth_type != 'Basic':
+                return False
+
+            import base64
+            decoded_credentials = base64.b64decode(credentials).decode('utf-8')
+            username, password = decoded_credentials.split(':', 1)
+
+            # Compare credentials securely
+            return hmac.compare_digest(username, WEBHOOK_USERNAME) and hmac.compare_digest(password, WEBHOOK_PASSWORD)
+        except Exception:
+            return False
 
 
 

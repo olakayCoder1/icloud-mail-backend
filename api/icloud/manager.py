@@ -37,6 +37,7 @@ class ICloudManager:
 
         try:
             # Initialize the WebDriver with the options
+            # self.driver = webdriver.Chrome()      
             self.driver = webdriver.Chrome(options=chrome_options)
             print("Browser initialized successfully.")
         except Exception as e:
@@ -528,7 +529,7 @@ class ICloudManager:
             input_field = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.TAG_NAME, "input"))
             )
-            input_field.send_keys('programmerolakay@gmail.com')
+            input_field.send_keys(email)
 
             button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.ID, "sign-in"))
@@ -538,7 +539,7 @@ class ICloudManager:
             password_input_field = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.ID, "password_text_field"))
             )
-            password_input_field.send_keys('olakay@pyDev1')
+            password_input_field.send_keys(password)
 
             button = WebDriverWait(driver, 10).until(
                 EC.element_to_be_clickable((By.ID, "sign-in"))
