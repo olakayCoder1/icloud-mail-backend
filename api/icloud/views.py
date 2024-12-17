@@ -137,13 +137,14 @@ class AccountsListResource(Resource):
             data = request.get_json()
             if 'id' not in data:
                 return {"status": False, "message": "id is required"}, 400
-            account = Account.query.filter_by(id=data['id']).first()
+            account = Account.query.filter_by(id=uuid.UUID(data['id'])).first()
             if not account:
                 return {"status": False, "message": "Account not found"}, 404
             db.session.delete(account)
             db.session.commit()
             return {"status": True, "message": "Account deleted successfully"}, 200
-        except:
+        except Exception as e:
+            print(e)
             return {"status": False, "message": "Failed to delete account"}, 500
             
 
