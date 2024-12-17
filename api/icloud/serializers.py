@@ -36,3 +36,13 @@ SEND_NEW_EMAIL_FIELDS_SERIALIZER = {
     'body' : fields.String(required=True , description='Email body'),
     'queue_id' : fields.String(required=True , description='Unique Identifier'),
 }
+
+
+
+ACCOUNT_THRESHOLD_UPDATE_FIELDS_SERIALIZER = {
+    'max_accounts' : fields.Integer(required=True , description='Maximum account'),
+}
+
+REMOVE_ACCOUNT_FIELDS_SERIALIZER = {
+    'id' : fields.String(required=True , description='Account ID'),
+}

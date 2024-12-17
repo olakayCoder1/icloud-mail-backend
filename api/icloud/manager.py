@@ -13,6 +13,9 @@ from selenium.webdriver.common.action_chains import ActionChains
 import time , requests 
 from flask import Blueprint
 
+from api.icloud.models import Account
+from ..helpers.utils import db
+
 
 lock = threading.Lock()
 
@@ -136,7 +139,7 @@ class ICloudManager:
         #     self.driver.switch_to.default_content()
         # Retry fetching input fields if they become stale
         retry_attempts = 3
-        otp = ICloudManager().get_otp_from_json_file(identifier)
+        otp = ICloudManager().get_otp_from_json_file(str(identifier))
         while retry_attempts > 0:
             try:
                 self.driver.switch_to.frame("aid-auth-widget")
@@ -345,7 +348,6 @@ class ICloudManager:
                 logging.error(e)
                 logging.error(traceback.print_exc())
                 print(f"'New Message' button not found or not clickable: {e}")
-                driver.quit()
                 self.driver = None
 
             finally:
@@ -406,6 +408,11 @@ class ICloudManager:
                         "otp":valid_otp.get("otp"),
                         "status": True
                     }
+                    # # update the account to active if exist 
+                    # account = Account.get_or_create(email=valid_otp['email'])
+                    # account.is_active = True
+                    # db.session.commit()
+
                     with open("otp_credentials.json", "w") as f:
                         json.dump(data, f, indent=4)
 
@@ -449,7 +456,7 @@ class ICloudManager:
     
 
 
-    def add_otp_to_json_file(self,identifier, otp):
+    def add_otp_to_json_file(self,identifier, otp,email):
         # Load existing OTP data from the JSON file
         try:
             with open("otp_credentials.json", "r") as f:
@@ -460,6 +467,7 @@ class ICloudManager:
         # Update the identifier key with the new OTP
         otp_data[identifier] = {
             "otp":otp,
+            "email":email,
             "status": False
         }
         # Save the updated data back to the JSON file
